@@ -1,22 +1,31 @@
 Bird bird;
-Obstacle obstacle;
+Obstacle[] obstacles = new Obstacle[2];
+Score score;
+PImage backgroundImage;
 // Stanje igre
+boolean gameStarted = false;
 boolean gameOver = false;
 
 void setup() {
-  size(300, 400);
+  size(284, 512);
   bird = new Bird(width/2, 0);
-  obstacle = new Obstacle(width, random(100, height-100));
+  obstacles[0] = new Obstacle(width, random(100, height-100));
+  obstacles[1] = new Obstacle(width*1.5+25, random(100, height-100));
+  score = new Score();
+  backgroundImage = loadImage("background.jpg");
 }
 
 void draw() {
-  background(#50BDFF);
+  background(backgroundImage);
 
   if (gameOver) {
     drawGameOver();
+  } else if (!gameStarted) {
+    drawStartScreen();
   } else {
     bird.draw();
-    obstacle.draw();
+    for(Obstacle o : obstacles) { o.draw(); }
+    score.draw();
     detectCollision();
   }
 }
@@ -28,12 +37,23 @@ void draw() {
    brzinom od 5px/frame.
 */
 void mousePressed() {
+  action();
+}
+
+void keyPressed() {
+  action();
+}
+
+void action() {
   if (gameOver) {
     gameOver = false;
     bird.reset();
-    obstacle.reset();
+    for(Obstacle o : obstacles) { o.reset(); }
+    score.reset();
+  } else if (!gameStarted) {
+    gameStarted = true;
   } else {
-    bird.vy = -5;
+    bird.jump();
   }
 }
 
@@ -52,6 +72,16 @@ void drawGameOver() {
        width, 100);
 }
 
+void drawStartScreen() {
+  rectMode(CENTER);
+  textSize(32);
+  textAlign(CENTER, CENTER);
+  fill(0);
+  text("Click to start",
+       width/2, height/2,
+       width, 100);
+}
+
 /**
    Funkcija koja detektuje "sudare" i u
    slučaju sudara prebacuje igru u stanje
@@ -65,26 +95,22 @@ void drawGameOver() {
 */
 void detectCollision() {
   // Da li je ptica izašla iz ekrana?
-  if (bird.y > height) {
+  if (bird.y > height || bird.y < 0) {
     gameOver = true;
   }
 
-  if (rectsCollide(bird.x, bird.y, bird.size, bird.size,
-                   obstacle.topX, obstacle.topY, obstacle.topX+obstacle.w, height-1)) {
-    gameOver = true;
+  for(Obstacle obstacle : obstacles) {
+    if (bird.x - bird.size/2.0 > obstacle.topX + obstacle.w) {
+      score.increase();
+    }
+
+    if (obstacle.topX + obstacle.w < 0) {
+      obstacle.reposition();
+      score.allowScoreIncrease();
+    }
+
+    if (obstacle.detectCollision(bird)) {
+      gameOver = true;
+    }
   }
-}
-
-boolean rectsCollide(float firstX, float firstY, float firstWidth, float firstHeight,
-                     float secondULX, float secondULY, float secondBRX, float secondBRY) {
-  float hh = firstHeight/2;
-  float hw = firstWidth/2;
-  return isInside(firstX - hw, firstY - hh, secondULX, secondULY, secondBRX, secondBRY) ||
-         isInside(firstX + hw, firstY - hh, secondULX, secondULY, secondBRX, secondBRY) ||
-         isInside(firstX + hw, firstY + hh, secondULX, secondULY, secondBRX, secondBRY) ||
-         isInside(firstX - hw, firstY + hh, secondULX, secondULY, secondBRX, secondBRY);
-}
-
-boolean isInside(float x, float y, float ulX, float ulY, float brX, float brY) {
-  return (x >= ulX && x <= brX && y >= ulY && y <= brY);
 }
