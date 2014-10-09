@@ -120,5 +120,22 @@ void detectCollision() {
     gameOver = true;
   }
 
-  // TODO: da li je ptica udarila u cijev?
+  if (rectsCollide(birdX, birdY, birdSize, birdSize,
+                   obstacleTopX, obstacleTopY, obstacleTopX+obstacleWidth, height-1)) {
+    gameOver = true;
+  }
+}
+
+boolean rectsCollide(float firstX, float firstY, float firstWidth, float firstHeight,
+                     float secondULX, float secondULY, float secondBRX, float secondBRY) {
+  float hh = firstHeight/2;
+  float hw = firstWidth/2;
+  return isInside(firstX - hw, firstY - hh, secondULX, secondULY, secondBRX, secondBRY) ||
+         isInside(firstX + hw, firstY - hh, secondULX, secondULY, secondBRX, secondBRY) ||
+         isInside(firstX + hw, firstY + hh, secondULX, secondULY, secondBRX, secondBRY) ||
+         isInside(firstX - hw, firstY + hh, secondULX, secondULY, secondBRX, secondBRY);
+}
+
+boolean isInside(float x, float y, float ulX, float ulY, float brX, float brY) {
+  return (x >= ulX && x <= brX && y >= ulY && y <= brY);
 }
