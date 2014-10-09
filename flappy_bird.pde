@@ -1,25 +1,12 @@
-// Osobine ptice
-float birdX = 150;
-float birdY = 0;
-float birdSize = 20;
-
-float vy = 0;    // brzina
-float ay = 0.2;  // ubrzanje (gravitacija)
-
-// Osobine prepreka ("cijevi")
-float obstacleTopX;
-float obstacleTopY;
-float obstacleWidth = 50;
-
+Bird bird;
+Obstacle obstacle;
 // Stanje igre
 boolean gameOver = false;
 
 void setup() {
   size(300, 400);
-
-  // Slučajno biramo visinu prepreke
-  obstacleTopX = width;
-  obstacleTopY = random(100, height-100);
+  bird = new Bird(width/2, 0);
+  obstacle = new Obstacle(width, random(100, height-100));
 }
 
 void draw() {
@@ -28,8 +15,8 @@ void draw() {
   if (gameOver) {
     drawGameOver();
   } else {
-    drawBird();
-    drawObstacle();
+    bird.draw();
+    obstacle.draw();
     detectCollision();
   }
 }
@@ -43,10 +30,10 @@ void draw() {
 void mousePressed() {
   if (gameOver) {
     gameOver = false;
-    birdY = 0;
-    vy = 0;
+    bird.reset();
+    obstacle.reset();
   } else {
-    vy = -5;
+    bird.vy = -5;
   }
 }
 
@@ -66,44 +53,6 @@ void drawGameOver() {
 }
 
 /**
-   Funkcija koja crta "pticu" i osvježava
-   njenu poziciju na ekranu.
-   - nema parametara
-   - nema povratne vrijednosti
-*/
-void drawBird() {
-  fill(255);
-  ellipse(birdX, birdY, birdSize, birdSize);
-
-  birdY += vy;
-  vy += ay;
-}
-
-/**
-   Funkcija koja crta "cijev" i osvježava
-   njenu poziciju na ekranu. Kada cijev nestane
-   s ekrana, vraćamo je na početak.
-   - nema parametara
-   - nema povratne vrijednosti
-*/
-void drawObstacle() {
-  // CORNERS mod je praktičan za crtanje cijevi
-  // jer možemo direktno odrediti na kojim
-  // koordinatama cijev počinje i gdje završava.
-  rectMode(CORNERS);
-  fill(#49D37A);
-  rect(obstacleTopX, obstacleTopY,
-       obstacleTopX+obstacleWidth, height-1);
-
-  obstacleTopX -= 1;
-
-  if (obstacleTopX + obstacleWidth < 0) {
-    obstacleTopX = width;
-    obstacleTopY = random(100, height-100);
-  }
-}
-
-/**
    Funkcija koja detektuje "sudare" i u
    slučaju sudara prebacuje igru u stanje
    "Game over", podešavajući globalnu boolean
@@ -116,12 +65,12 @@ void drawObstacle() {
 */
 void detectCollision() {
   // Da li je ptica izašla iz ekrana?
-  if (birdY > height) {
+  if (bird.y > height) {
     gameOver = true;
   }
 
-  if (rectsCollide(birdX, birdY, birdSize, birdSize,
-                   obstacleTopX, obstacleTopY, obstacleTopX+obstacleWidth, height-1)) {
+  if (rectsCollide(bird.x, bird.y, bird.size, bird.size,
+                   obstacle.topX, obstacle.topY, obstacle.topX+obstacle.w, height-1)) {
     gameOver = true;
   }
 }
